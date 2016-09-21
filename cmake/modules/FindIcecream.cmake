@@ -8,6 +8,7 @@
 
 #=============================================================================
 # Copyright 2015 Kevin Funk <kfunk@kde.org>
+# Copyright 2016 Dimitri Bouron <bouron.d@gmail.com>
 #
 # Distributed under the OSI-approved BSD License (the "License");
 # see accompanying file Copyright.txt for details.
@@ -28,12 +29,26 @@ else ()
     # in the FIND_PATH() and FIND_LIBRARY() calls
     find_package(PkgConfig)
     pkg_check_modules(PC_ICECC icecc)
-    # The icecream lib may optionally need linking to -lcap-ng, so dig it out
-    # of pkg-config data.
+    # The icecream lib may optionally need linking to -lcap-ng or -llzo2,
+    # so dig it out of pkg-config data.
     # Somewhat hackish, but I can't find a simpler way to do this with CMake.
     foreach(lib ${PC_ICECC_STATIC_LIBRARIES})
       if(NOT ${lib} STREQUAL "icecc")
         list(APPEND extraLibs "-l${lib}")
+
+        if (${lib} STREQUAL "lzo2")
+          find_package(Lzo2)
+          set_package_properties(Lzo2 PROPERTIES
+            DESCRIPTION "Data compression library"
+            TYPE REQUIRED
+            )
+        elseif (${lib} STREQUAL "cap-ng")
+          find_package(Capng)
+          set_package_properties(Capng PROPERTIES
+            DESCRIPTION "Posix capabilities library"
+            TYPE REQUIRED
+            )
+        endif()
       endif()
     endforeach()
     set(Icecream_VERSION "${PC_ICECC_VERSION}")
